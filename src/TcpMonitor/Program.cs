@@ -1,4 +1,6 @@
 ﻿using System;
+using SimpleInjector;
+using SimpleInjector.Lifestyles;
 using TcpMonitor.Views;
 using Terminal.Gui;
 using TcpMonitor.Extensions;
@@ -10,13 +12,26 @@ namespace TcpMonitor
     /// </summary>
     public class Program
     {
-        private static IServiceProvider _serviceProvider;
+        private static Container _serviceProvider;
 
         public static void Main()
         {
-            _serviceProvider = Startup.ConfigureServices();
+            _serviceProvider = ConfigureServices();
+            using Scope scope = AsyncScopedLifestyle.BeginScope(_serviceProvider);
             Application.Init();
-            Application.Run(_serviceProvider.GetService<App>());
+            Application.Run(scope.GetService<App>());
+        }
+
+        private static Container ConfigureServices()
+        {
+            var container = new Container();
+            container.Options.DefaultLifestyle = Lifestyle.Scoped;
+            container.Options.DefaultScopedLifestyle = ScopedLifestyle.Flowing;
+
+            container.Register<App>();
+            container.Register<MainView>();
+
+            return container;
         }
     }
 }
