@@ -1,8 +1,16 @@
-﻿using Terminal.Gui;
+﻿using TcpMonitor.Views.Common;
+using Terminal.Gui;
 
 namespace TcpMonitor.Views
 {
-    public class MainView : Window
+    public sealed class MainView : Window
     {
+        private GridView _gridView;
+
+        public MainView()
+        {
+            Width = Dim.Fill();
+            Height = Dim.Fill();
+        }
     }
 }
