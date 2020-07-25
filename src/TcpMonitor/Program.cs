@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
 using TcpMonitor.Views;
 using Terminal.Gui;
 using TcpMonitor.Extensions;
+using TcpMonitor.Services;
 
 namespace TcpMonitor
 {
@@ -17,16 +19,14 @@ namespace TcpMonitor
         public static void Main()
         {
             _serviceProvider = ConfigureServices();
-            using Scope scope = AsyncScopedLifestyle.BeginScope(_serviceProvider);
             Application.Init();
-            Application.Run(scope.GetService<App>());
+            Application.Run(_serviceProvider.GetService<App>());
         }
 
         private static Container ConfigureServices()
         {
             var container = new Container();
-            container.Options.DefaultLifestyle = Lifestyle.Scoped;
-            container.Options.DefaultScopedLifestyle = ScopedLifestyle.Flowing;
+            container.Options.DefaultLifestyle = Lifestyle.Singleton;
 
             container.Register<App>();
             container.Register<MainView>();
