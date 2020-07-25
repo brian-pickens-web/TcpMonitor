@@ -14,8 +14,8 @@ namespace TcpMonitor.Views
             Width = Dim.Fill();
             Height = Dim.Fill();
 
-            var tcpConnectionsGrid = new TcpConnectionsGrid();
-            Add(tcpConnectionsGrid);
+            Add(new TcpPerformanceGrid());
+            Add(new TcpConnectionsGrid());
         }
     }
 }
