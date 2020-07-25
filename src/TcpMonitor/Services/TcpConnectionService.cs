@@ -5,9 +5,9 @@ using TcpMonitor.Models;
 
 namespace TcpMonitor.Services
 {
-    public class TcpConnectionService
+    public static class TcpConnectionService
     {
-        public IEnumerable<TcpConnectionModel> GetTcpConnectionData()
+        public static IEnumerable<TcpConnectionModel> GetTcpConnectionData()
         {
             return WinTcpTable.GetAllTCPConnections().Select(row => new TcpConnectionModel()
             {
@@ -20,7 +20,7 @@ namespace TcpMonitor.Services
             });
         }
 
-        private string Map(TcpState state)
+        private static string Map(TcpState state)
         {
             switch (state)
             {
