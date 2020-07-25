@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.Management.Infrastructure;
 using Microsoft.VisualBasic;
 using TcpMonitor.Models;
@@ -28,7 +27,19 @@ namespace TcpMonitor.Services
             ObjRefresher.AddEnum(ServicesEx, PerfTcpV4RawDataCimClassName);
         }
 
-        public static TcpPerformanceModel GetTcpPerformanceCom()
+        public static TcpPerformanceModel GetTcpPerformance()
+        {
+            try
+            {
+                return GetTcpPerformanceWinRM();
+            }
+            catch (CimException)
+            {
+                return GetTcpPerformanceCom();
+            }
+        }
+
+        private static TcpPerformanceModel GetTcpPerformanceCom()
         {
             ObjRefresher.Refresh();
             foreach (SWbemRefreshableItem refreshItem in ObjRefresher)
@@ -45,11 +56,11 @@ namespace TcpMonitor.Services
                     };
                 }
             }
-
+             
             return null;
         }
 
-        public static TcpPerformanceModel GetTcpPerformance()
+        private static TcpPerformanceModel GetTcpPerformanceWinRM()
         {
             var session = CimSession.Create(Server);
             var instance = session.GetInstance(Namespace, new CimInstance(PerfTcpV4RawDataCimClassName));
