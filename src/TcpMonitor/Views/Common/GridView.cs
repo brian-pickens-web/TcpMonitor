@@ -16,11 +16,13 @@ namespace TcpMonitor.Views.Common
             _columns = new List<GridViewColumn>();
         }
 
-        public void SetRefreshableDataSource<T>(Func<IEnumerable<T>> datasource, int refreshMilliseconds = 3000)
+        public void SetRefreshableDataSource<T>(Func<IEnumerable<T>> getData, int refreshMilliseconds = 3000)
         {
-            SetDataSource(datasource());
+            SetDataSource(getData());
             Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(refreshMilliseconds), loop =>
             {
+                ClearRows();
+                SetRowsFromDatasource(getData());
                 return true;
             });
         }
@@ -30,15 +32,7 @@ namespace TcpMonitor.Views.Common
             var type = typeof(T);
             var columnNames = type.GetProperties().Select(info => info.Name).ToArray();
             SetColumns(columnNames);
-            foreach (var item in datasource)
-            {
-                var row = new string[columnNames.Length];
-                for (int i = 0; i < columnNames.Length; i++)
-                {
-                    row[i] = type.GetProperty(columnNames[i])?.GetValue(item).ToString();
-                }
-                AddRow(row);
-            }
+            SetRowsFromDatasource(datasource);
         }
 
         public void SetColumns(params string[] columnNames)
@@ -55,7 +49,30 @@ namespace TcpMonitor.Views.Common
             }
         }
 
-        public void AddRow(params string[] values)
+        public void ClearRows()
+        {
+            foreach (var column in _columns)
+            {
+                column.ClearValues();
+            }
+        }
+
+        private void SetRowsFromDatasource<T>(IEnumerable<T> datasource)
+        {
+            var type = typeof(T);
+            var columnNames = type.GetProperties().Select(info => info.Name).ToArray();
+            foreach (var item in datasource)
+            {
+                var row = new string[columnNames.Length];
+                for (int i = 0; i < columnNames.Length; i++)
+                {
+                    row[i] = type.GetProperty(columnNames[i])?.GetValue(item).ToString();
+                }
+                AddRow(row);
+            }
+        }
+
+        private void AddRow(params string[] values)
         {
             for (int i = 0; i < values.Length; i++)
             {
@@ -68,12 +85,6 @@ namespace TcpMonitor.Views.Common
                 }
                 column.AddValue(value);
             }
-        }
-
-        public override void RemoveAll()
-        {
-            _columns.Clear();
-            base.RemoveAll();
         }
 
         private void AddColumn(GridViewColumn column)

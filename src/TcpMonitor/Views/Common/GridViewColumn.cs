@@ -1,4 +1,5 @@
-﻿using Terminal.Gui;
+﻿using System.Collections.Generic;
+using Terminal.Gui;
 
 namespace TcpMonitor.Views.Common
 {
@@ -7,11 +8,12 @@ namespace TcpMonitor.Views.Common
         private const char DividerChar = '-';
         private int _width;
         private readonly Label _divider;
+        private readonly List<Label> _values = new List<Label>();
 
         public GridViewColumn(string name)
         {
             _width = name.Length;
-            Height = 10;
+            Height = Dim.Fill();
             Width = _width;
             _divider = new Label(string.Empty.PadLeft(name.Length, DividerChar))
             {
@@ -34,7 +36,18 @@ namespace TcpMonitor.Views.Common
 
             var yPos = Pos.Y(this) + this.Subviews.Count;
             var xPos = value == DividerChar.ToString() ? Pos.Center() : 0;
-            Add(new Label(value) { Y = yPos, X = xPos });
+            var label = new Label(value) {Y = yPos, X = xPos};
+            _values.Add(label);
+            Add(label);
+        }
+
+        public void ClearValues()
+        {
+            foreach (var value in _values)
+            {
+                Remove(value);
+            }
+            _values.Clear();
         }
     }
 }
