@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TcpMonitor": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
