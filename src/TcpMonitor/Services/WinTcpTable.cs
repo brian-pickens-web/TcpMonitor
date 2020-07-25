@@ -35,12 +35,12 @@ namespace TcpMonitor.Services
             var dwNumEntriesField = typeof(IPT).GetField("dwNumEntries");
 
             // how much memory do we need?
-            uint ret = GetExtendedTcpTable(IntPtr.Zero, ref buffSize, true, ipVersion, TcpTableClassType.TCP_TABLE_OWNER_PID_ALL);
+            GetExtendedTcpTable(IntPtr.Zero, ref buffSize, true, ipVersion, TcpTableClassType.TCP_TABLE_OWNER_PID_ALL);
             IntPtr tcpTablePtr = Marshal.AllocHGlobal(buffSize);
 
             try
             {
-                ret = GetExtendedTcpTable(tcpTablePtr, ref buffSize, true, ipVersion, TcpTableClassType.TCP_TABLE_OWNER_PID_ALL);
+                uint ret = GetExtendedTcpTable(tcpTablePtr, ref buffSize, true, ipVersion, TcpTableClassType.TCP_TABLE_OWNER_PID_ALL);
                 if (ret != 0)
                     return new List<IPR>();
 
