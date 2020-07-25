@@ -1,36 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Management.Infrastructure;
 using TcpMonitor.Models;
 
 namespace TcpMonitor.Services
 {
     public class TcpConnectionService
     {
-        private const string Server = "localhost";
-        private const string Path = @"root\cimv2";
-
-        private const string PerfTcpV4RawDataCimClassName = "Win32_PerfRawData_Tcpip_TCPv4";
-        private const string PerfConnectionFailuresKey = "ConnectionFailures";
-        private const string PerfConnectionsActiveKey = "ConnectionsActive";
-        private const string PerfConnectionsEstablishedKey = "ConnectionsEstablished";
-        private const string PerfConnectionsPassiveKey = "ConnectionsPassive";
-        private const string PerfConnectionsResetKey = "ConnectionsReset";
-
-        public Dictionary<string, string> GetTcpPerformance()
-        {
-            var session = CimSession.Create(Server);
-            var instance = session.GetInstance(Path, new CimInstance(PerfTcpV4RawDataCimClassName));
-            var result = new Dictionary<string, string>();
-            result.Add(PerfConnectionFailuresKey, instance.CimInstanceProperties[PerfConnectionFailuresKey].Value.ToString());
-            result.Add(PerfConnectionsActiveKey, instance.CimInstanceProperties[PerfConnectionsActiveKey].Value.ToString());
-            result.Add(PerfConnectionsEstablishedKey, instance.CimInstanceProperties[PerfConnectionsEstablishedKey].Value.ToString());
-            result.Add(PerfConnectionsPassiveKey, instance.CimInstanceProperties[PerfConnectionsPassiveKey].Value.ToString());
-            result.Add(PerfConnectionsResetKey, instance.CimInstanceProperties[PerfConnectionsResetKey].Value.ToString());
-            return result;
-        }
-
         public IEnumerable<TcpConnectionModel> GetTcpConnectionData()
         {
             return WinTcpTable.GetAllTCPConnections().Select(row => new TcpConnectionModel()
