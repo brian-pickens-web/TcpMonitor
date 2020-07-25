@@ -29,14 +29,7 @@ namespace TcpMonitor.Services
 
         public static TcpPerformanceModel GetTcpPerformance()
         {
-            try
-            {
-                return GetTcpPerformanceWinRM();
-            }
-            catch (CimException)
-            {
-                return GetTcpPerformanceCom();
-            }
+            return GetTcpPerformanceCom();
         }
 
         private static TcpPerformanceModel GetTcpPerformanceCom()
