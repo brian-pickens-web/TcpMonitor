@@ -1,0 +1,10 @@
+# Research Urls Used
+https://serverfault.com/questions/567752/what-wmi-counters-can-indicate-port-exhaustion
+https://docs.microsoft.com/en-us/previous-versions/aa394341(v%3Dvs.85)
+https://docs.microsoft.com/en-us/windows/win32/wmisdk/retrieving-raw-and-formatted-performance-data?redirectedfrom=MSDN
+https://www.pinvoke.net/default.aspx/iphlpapi/getextendedtcptable.html
+https://docs.microsoft.com/en-us/windows/win32/wmisdk/retrieving-a-class
+https://docs.microsoft.com/en-us/windows/win32/wmisdk/accessing-performance-data-in-c--?redirectedfrom=MSDN
+https://docs.microsoft.com/en-us/windows/win32/wmisdk/refreshing-wmi-data-in-scripts
+https://docs.microsoft.com/en-us/windows/win32/wmisdk/scripting-api-objects
+https://stackoverflow.com/questions/9190437/monitoring-bandwith-on-a-remote-machine-with-wmi
