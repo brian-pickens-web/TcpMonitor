@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Terminal.Gui;
 
@@ -15,21 +16,37 @@ namespace TcpMonitor.Views.Common
             _columns = new List<GridViewColumn>();
         }
 
-        public void SetDataSource(Dictionary<string, IEnumerable<string>> datasource)
+        public void SetRefreshableDataSource<T>(Func<IEnumerable<T>> datasource, int refreshMilliseconds = 3000)
         {
-            var pivotedDatasource = new Dictionary<int, IEnumerable<string>>();
-            Enumerable.Range(0, datasource.Max(pair => pair.Value.Count()))
-                .ToList()
-                .ForEach(i => pivotedDatasource.Add(i, datasource.Values.Select(values => values.Count() > i ? values.ToArray()[i] : string.Empty)));
-
-            SetColumns(datasource.Keys.ToArray());
-            foreach (var row in pivotedDatasource)
+            SetDataSource(datasource());
+            Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(refreshMilliseconds), loop =>
             {
-                AddRow(row.Value.ToArray());
+                return true;
+            });
+        }
+
+        public void SetDataSource<T>(IEnumerable<T> datasource)
+        {
+            var type = typeof(T);
+            var columnNames = type.GetProperties().Select(info => info.Name).ToArray();
+            SetColumns(columnNames);
+            foreach (var item in datasource)
+            {
+                var row = new string[columnNames.Length];
+                for (int i = 0; i < columnNames.Length; i++)
+                {
+                    row[i] = type.GetProperty(columnNames[i])?.GetValue(item).ToString();
+                }
+                AddRow(row);
             }
         }
 
         public void SetColumns(params string[] columnNames)
+        {
+            SetColumns(columnNames.AsEnumerable());
+        }
+
+        public void SetColumns(IEnumerable<string> columnNames)
         {
             this.RemoveAll();
             foreach (var columnName in columnNames)
