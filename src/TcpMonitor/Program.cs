@@ -1,7 +1,5 @@
-﻿using System;
-using System.Diagnostics;
+﻿using Microsoft.Extensions.Caching.Memory;
 using SimpleInjector;
-using SimpleInjector.Lifestyles;
 using TcpMonitor.Views;
 using Terminal.Gui;
 using TcpMonitor.Extensions;
@@ -30,6 +28,17 @@ namespace TcpMonitor
 
             container.Register<App>();
             container.Register<MainView>();
+            container.Register<TcpPerformanceGrid>();
+            container.Register<TcpConnectionsGrid>();
+
+            container.Register<IMemoryCache>(() => new MemoryCache(new MemoryCacheOptions()));
+            container.Register<IProcessService, ProcessService>();
+            container.Register<ITcpConnectionService, TcpConnectionService>();
+
+            // Use the WinRM service if enabled for superior performance else use COM interop implementation
+            var isWinRmEnabled = TcpPerformanceWinRMService.IsWindowsRemoteManagementEnabled();
+            container.RegisterConditional<ITcpPerformanceService, TcpPerformanceWinRMService>(context => isWinRmEnabled);
+            container.RegisterConditional<ITcpPerformanceService, TcpPerformanceComService>(context => !isWinRmEnabled);
 
             return container;
         }

@@ -5,13 +5,21 @@ using TcpMonitor.Models;
 
 namespace TcpMonitor.Services
 {
-    public static class TcpConnectionService
+    public class TcpConnectionService : ITcpConnectionService
     {
-        public static IEnumerable<TcpConnectionModel> GetTcpConnectionData()
+        private IProcessService _processService;
+
+        public TcpConnectionService(IProcessService processService)
+        {
+            _processService = processService;
+        }
+
+        public IEnumerable<TcpConnectionModel> GetTcpConnectionData()
         {
             return WinTcpTable.GetAllTCPConnections().Select(row => new TcpConnectionModel()
             {
                 ProcessId = row.ProcessId,
+                ProcessName = _processService.GetProcessFromPid(Convert.ToInt32(row.ProcessId)).ProcessName,
                 LocalAddress = row.LocalAddress,
                 LocalPort = row.LocalPort,
                 RemoteAddress = row.RemoteAddress,

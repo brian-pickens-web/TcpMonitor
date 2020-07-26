@@ -8,17 +8,18 @@ using Terminal.Gui;
 
 namespace TcpMonitor.Views
 {
-    public class TcpPerformanceGrid : View
+    public sealed class TcpPerformanceGrid : View
     {
-        private readonly GridView _tcpPerformanceGrid;
+        private readonly ITcpPerformanceService _tcpPerformanceService;
 
-        public TcpPerformanceGrid()
+        public TcpPerformanceGrid(ITcpPerformanceService tcpPerformanceService)
         {
+            _tcpPerformanceService = tcpPerformanceService;
             Height = 5;
             Width = Dim.Fill();
-            _tcpPerformanceGrid = new GridView();
-            _tcpPerformanceGrid.SetRefreshableDataSource(RefreshTcpPerformanceGrid);
-            Add(_tcpPerformanceGrid);
+            var tcpPerformanceGrid = new GridView();
+            tcpPerformanceGrid.SetRefreshableDataSource(RefreshTcpPerformanceGrid);
+            Add(tcpPerformanceGrid);
         }
 
         private IEnumerable<TcpPerformanceModel> RefreshTcpPerformanceGrid()
@@ -28,7 +29,7 @@ namespace TcpMonitor.Views
 
         private TcpPerformanceModel GetTcpPerformance()
         {
-            return TcpPerformanceService.GetTcpPerformance();
+            return _tcpPerformanceService.GetTcpPerformance();
         }
     }
 }

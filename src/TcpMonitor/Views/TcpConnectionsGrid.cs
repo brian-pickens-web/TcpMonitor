@@ -9,20 +9,21 @@ namespace TcpMonitor.Views
 {
     public sealed class TcpConnectionsGrid : ScrollView
     {
-        private readonly GridView _tcpConnectionsGrid;
+        private readonly ITcpConnectionService _tcpConnectionService;
 
-        public TcpConnectionsGrid()
-            : base(new Rect(0, 5, 100, 21))
+        public TcpConnectionsGrid(ITcpConnectionService tcpConnectionService)
+            : base(new Rect(0, 5, 115, 21))
         {
             ShowVerticalScrollIndicator = true;
-            _tcpConnectionsGrid = new GridView();
-            _tcpConnectionsGrid.SetRefreshableDataSource(RefreshTcpConnectionsGrid);
-            Add(_tcpConnectionsGrid);
+            _tcpConnectionService = tcpConnectionService;
+            var tcpConnectionsGrid = new GridView();
+            tcpConnectionsGrid.SetRefreshableDataSource(RefreshTcpConnectionsGrid);
+            Add(tcpConnectionsGrid);
         }
 
         private IEnumerable<TcpConnectionModel> RefreshTcpConnectionsGrid()
         {
-            ContentSize = new Size(99, 2);
+            ContentSize = new Size(109, 2);
             foreach (var tcpConnectionModel in GetTcpConnections())
             {
                 ContentSize = Size.Add(ContentSize, new Size(0, 1));
@@ -32,7 +33,7 @@ namespace TcpMonitor.Views
 
         private IEnumerable<TcpConnectionModel> GetTcpConnections()
         {
-            return TcpConnectionService.GetTcpConnectionData()
+            return _tcpConnectionService.GetTcpConnectionData()
                 .OrderBy(model => model.ProcessId);
         }
     }
