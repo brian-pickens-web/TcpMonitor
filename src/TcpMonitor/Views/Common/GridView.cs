@@ -16,6 +16,12 @@ namespace TcpMonitor.Views.Common
             _columns = new List<GridViewColumn>();
         }
 
+        public void SetRefreshableDataSource<T>(Func<T> getData, int refreshMilliseconds = 3000)
+        {
+            var wrapper = new Func<IEnumerable<T>>(() => new [] { getData() }.AsEnumerable());
+            SetRefreshableDataSource(wrapper, refreshMilliseconds);
+        }
+
         public void SetRefreshableDataSource<T>(Func<IEnumerable<T>> getData, int refreshMilliseconds = 3000)
         {
             SetDataSource(getData());
@@ -25,6 +31,11 @@ namespace TcpMonitor.Views.Common
                 SetRowsFromDatasource(getData());
                 return true;
             });
+        }
+
+        public void SetDataSource<T>(T datasource)
+        {
+            SetDataSource(new [] { datasource }.AsEnumerable());
         }
 
         public void SetDataSource<T>(IEnumerable<T> datasource)

@@ -29,15 +29,18 @@ namespace TcpMonitor
             container.Register<MainView>();
             container.Register<TcpPerformanceGrid>();
             container.Register<TcpConnectionsGrid>();
+            container.Register<TcpSettingsGrid>();
 
             container.Register<IMemoryCache>(() => new MemoryCache(new MemoryCacheOptions()));
             container.Register<IProcessService, ProcessService>();
             container.Register<ITcpConnectionService, TcpConnectionService>();
 
             // Use the WinRM service if enabled for superior performance else use COM interop implementation
-            var isWinRmEnabled = TcpPerformanceWinRMService.IsWindowsRemoteManagementEnabled();
-            container.RegisterConditional<ITcpPerformanceService, TcpPerformanceWinRMService>(context => isWinRmEnabled);
+            var isWinRmEnabled = TcpWinRMService.IsWindowsRemoteManagementEnabled();
+            container.RegisterConditional<ITcpPerformanceService, TcpWinRMService>(context => isWinRmEnabled);
             container.RegisterConditional<ITcpPerformanceService, TcpPerformanceComService>(context => !isWinRmEnabled);
+            container.RegisterConditional<ITcpSettingsService, TcpWinRMService>(context => isWinRmEnabled);
+            container.RegisterConditional<ITcpSettingsService, TcpSettingsComService>(context => !isWinRmEnabled);
 
             return container;
         }

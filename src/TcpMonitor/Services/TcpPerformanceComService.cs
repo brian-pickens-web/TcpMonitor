@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.VisualBasic;
+using TcpMonitor.Domain;
 using TcpMonitor.Models;
 using WbemScripting;
 
@@ -14,7 +15,7 @@ namespace TcpMonitor.Services
 
         static TcpPerformanceComService()
         {
-            ObjRefresher.AddEnum(ServicesEx, TcpPerformance.PerfTcpV4RawDataCimClassName);
+            ObjRefresher.AddEnum(ServicesEx, TcpPerformance.TcpPerformanceClassName);
         }
 
         public TcpPerformanceModel GetTcpPerformance()
@@ -31,11 +32,11 @@ namespace TcpMonitor.Services
                 {
                     return new TcpPerformanceModel()
                     {
-                        ConnectionFailures = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.PerfConnectionFailuresKey).get_Value()),
-                        ConnectionsActive = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.PerfConnectionsActiveKey).get_Value()),
-                        ConnectionsEstablished = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.PerfConnectionsEstablishedKey).get_Value()),
-                        ConnectionsPassive = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.PerfConnectionsPassiveKey).get_Value()),
-                        ConnectionsReset = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.PerfConnectionsResetKey).get_Value())
+                        ConnectionFailures = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionFailuresKey).get_Value()),
+                        ConnectionsActive = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsActiveKey).get_Value()),
+                        ConnectionsEstablished = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsEstablishedKey).get_Value()),
+                        ConnectionsPassive = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsPassiveKey).get_Value()),
+                        ConnectionsReset = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsResetKey).get_Value())
                     };
                 }
             }
