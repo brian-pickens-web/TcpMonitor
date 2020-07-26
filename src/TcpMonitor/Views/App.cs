@@ -4,15 +4,22 @@ namespace TcpMonitor.Views
 {
     public sealed class App : Toplevel
     {
-        private View _menuBar = new MenuBar(new[]
+        public App(MenuBarView menuBarView, SideMenuView sideMenuView, MainView mainView)
         {
-            new MenuBarItem("_File", new[] { new MenuItem("_Quit", string.Empty, Application.RequestStop) })
-        });
+            menuBarView.Y = Pos.Top(this);
+            sideMenuView.Y = Pos.Bottom(menuBarView);
+            sideMenuView.X = Pos.Left(this);
+            mainView.Y = Pos.Bottom(menuBarView);
+            mainView.X = Pos.Right(sideMenuView);
 
-        public App(MainView mainView)
-        {
-            Add(_menuBar);
-            mainView.Y = 1;
+            sideMenuView.OnSelectedMenuItemChanged = view =>
+            {
+                mainView.RemoveAll();
+                mainView.Add(view);
+            };
+
+            Add(menuBarView);
+            Add(sideMenuView);
             Add(mainView);
         }
     }
