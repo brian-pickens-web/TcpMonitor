@@ -12,9 +12,8 @@ namespace TcpMonitor.Views
         private readonly ITcpConnectionService _tcpConnectionService;
 
         public TcpConnectionsGrid(ITcpConnectionService tcpConnectionService)
-            // : base(new Rect(0, 4, 115, 20))
         {
-            Height = 20;
+            Height = 18;
             Width = 115;
             ShowVerticalScrollIndicator = true;
             _tcpConnectionService = tcpConnectionService;
