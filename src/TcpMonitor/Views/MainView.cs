@@ -1,21 +1,16 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using TcpMonitor.Models;
-using TcpMonitor.Services;
-using TcpMonitor.Views.Common;
-using Terminal.Gui;
+﻿using Terminal.Gui;
 
 namespace TcpMonitor.Views
 {
     public sealed class MainView : Window
     {
-        public MainView()
+        public MainView(TcpPerformanceGrid tcpPerformanceGrid, TcpConnectionsGrid tcpConnectionsGrid)
         {
             Width = Dim.Fill();
             Height = Dim.Fill();
 
-            Add(new TcpPerformanceGrid());
-            Add(new TcpConnectionsGrid());
+            Add(tcpPerformanceGrid);
+            Add(tcpConnectionsGrid);
         }
     }
 }
