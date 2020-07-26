@@ -15,16 +15,11 @@ namespace TcpMonitor.Views
         public TcpPerformanceGrid(ITcpPerformanceService tcpPerformanceService)
         {
             _tcpPerformanceService = tcpPerformanceService;
-            Height = 5;
+            Height = 3;
             Width = Dim.Fill();
             var tcpPerformanceGrid = new GridView();
-            tcpPerformanceGrid.SetRefreshableDataSource(RefreshTcpPerformanceGrid);
+            tcpPerformanceGrid.SetRefreshableDataSource(GetTcpPerformance);
             Add(tcpPerformanceGrid);
-        }
-
-        private IEnumerable<TcpPerformanceModel> RefreshTcpPerformanceGrid()
-        {
-            return new[] { GetTcpPerformance() };
         }
 
         private TcpPerformanceModel GetTcpPerformance()
