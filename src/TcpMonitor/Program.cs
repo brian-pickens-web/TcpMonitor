@@ -27,6 +27,10 @@ namespace TcpMonitor
 
             container.Register<App>();
             container.Register<MainView>();
+            container.Register<MenuBarView>();
+            container.Register<SideMenuView>();
+            container.Register<DashboardView>();
+            container.Register<TcpConnectionsView>();
             container.Register<TcpPerformanceGrid>();
             container.Register<TcpConnectionsGrid>();
             container.Register<TcpSettingsGrid>();

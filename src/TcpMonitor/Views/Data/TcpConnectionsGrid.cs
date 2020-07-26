@@ -13,8 +13,8 @@ namespace TcpMonitor.Views
 
         public TcpConnectionsGrid(ITcpConnectionService tcpConnectionService)
         {
-            Height = 18;
-            Width = 115;
+            Height = Dim.Fill();
+            Width = Dim.Fill();
             ShowVerticalScrollIndicator = true;
             _tcpConnectionService = tcpConnectionService;
             var tcpConnectionsGrid = new GridView();
