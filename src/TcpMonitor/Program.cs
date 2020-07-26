@@ -2,7 +2,6 @@
 using SimpleInjector;
 using TcpMonitor.Views;
 using Terminal.Gui;
-using TcpMonitor.Extensions;
 using TcpMonitor.Services;
 
 namespace TcpMonitor
@@ -18,7 +17,7 @@ namespace TcpMonitor
         {
             _serviceProvider = ConfigureServices();
             Application.Init();
-            Application.Run(_serviceProvider.GetService<App>());
+            Application.Run(_serviceProvider.GetInstance<App>());
         }
 
         private static Container ConfigureServices()
