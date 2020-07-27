@@ -2,6 +2,9 @@
   "profiles": {
     "TcpMonitor": {
       "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Debug"
+      },
       "nativeDebugging": true
     }
   }

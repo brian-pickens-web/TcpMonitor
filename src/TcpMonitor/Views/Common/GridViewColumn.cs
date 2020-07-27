@@ -3,7 +3,7 @@ using Terminal.Gui;
 
 namespace TcpMonitor.Views.Common
 {
-    public sealed class GridViewColumn : View
+    public sealed class GridViewColumn : Terminal.Gui.View
     {
         private const char DividerChar = '-';
         private int _width;

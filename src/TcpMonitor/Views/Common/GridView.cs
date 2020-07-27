@@ -8,6 +8,7 @@ namespace TcpMonitor.Views.Common
     public class GridView : View
     {
         private readonly List<GridViewColumn> _columns;
+        private Func<MainLoop, bool> _refreshAction;
 
         public GridView()
         {
@@ -16,21 +17,31 @@ namespace TcpMonitor.Views.Common
             _columns = new List<GridViewColumn>();
         }
 
-        public void SetRefreshableDataSource<T>(Func<T> getData, int refreshMilliseconds = 3000)
+        public void SetRefreshableDataSource<T>(Func<T> getData)
         {
             var wrapper = new Func<IEnumerable<T>>(() => new [] { getData() }.AsEnumerable());
-            SetRefreshableDataSource(wrapper, refreshMilliseconds);
+            SetRefreshableDataSource(wrapper);
         }
 
-        public void SetRefreshableDataSource<T>(Func<IEnumerable<T>> getData, int refreshMilliseconds = 3000)
+        public void SetRefreshableDataSource<T>(Func<IEnumerable<T>> getData)
         {
-            SetDataSource(getData());
-            Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(refreshMilliseconds), loop =>
+            _refreshAction = loop =>
             {
                 ClearRows();
                 SetRowsFromDatasource(getData());
                 return true;
-            });
+            };
+            SetDataSource(getData());
+        }
+
+        public void StopRefresh()
+        {
+            Application.MainLoop.RemoveTimeout(_refreshAction);
+        }
+
+        public void StartRefresh(int refreshMilliseconds = 3000)
+        {
+            Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(refreshMilliseconds), _refreshAction);
         }
 
         public void SetDataSource<T>(T datasource)
