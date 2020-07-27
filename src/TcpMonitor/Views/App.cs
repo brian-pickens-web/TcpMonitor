@@ -12,7 +12,7 @@ namespace TcpMonitor.Views
             mainView.Y = Pos.Bottom(menuBarView);
             mainView.X = Pos.Right(sideMenuView);
 
-            sideMenuView.OnSelectedMenuItemChanged = view =>
+            sideMenuView.OnSelectedMenuItemChanged += view =>
             {
                 mainView.RemoveAll();
                 mainView.Add(view);

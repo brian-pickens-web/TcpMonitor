@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using TcpMonitor.Views.Common;
 using Terminal.Gui;
 
 namespace TcpMonitor.Views
@@ -19,6 +20,8 @@ namespace TcpMonitor.Views
             _menu.Add("Dashboard", dashboardView);
             _menu.Add("TCP Connections", tcpConnectionsView);
 
+            OnSelectedMenuItemChanged += SetViewsVisibility;
+
             var views = new ListView();
             views.Height = Dim.Fill();
             views.Width = Dim.Fill();
@@ -31,7 +34,18 @@ namespace TcpMonitor.Views
 
         private void SelectedItemChanged(ListViewItemEventArgs obj)
         {
-            OnSelectedMenuItemChanged(_menu[obj.Value.ToString()]);
+            var selectedView = _menu[obj.Value.ToString()];
+            OnSelectedMenuItemChanged(selectedView);
+        }
+
+        private void SetViewsVisibility(View view)
+        {
+            foreach (var item in _menu.Values.Select(view => view as IVisibilityChanged))
+            {
+                item?.VisibilityChanged(false);
+            }
+            var trySetVisibility = view as IVisibilityChanged;
+            trySetVisibility?.VisibilityChanged(true);
         }
     }
 }
