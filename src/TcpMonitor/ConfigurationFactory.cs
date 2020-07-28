@@ -42,6 +42,7 @@ namespace TcpMonitor
         {
             var container = new Container();
             container.Options.DefaultLifestyle = Lifestyle.Singleton;
+            container.Options.EnableAutoVerification = !Environment.IsDevelopment();
 
             RegisterViews(container);
             RegisterServices(container);
