@@ -13,6 +13,11 @@ namespace TcpMonitor.Services
             _cache = cache;
         }
 
+        public Process GetProcessFromPid(uint pid)
+        {
+            return GetProcessFromPid(Convert.ToInt32(pid));
+        }
+
         public Process GetProcessFromPid(int pid)
         {
             if (_cache.TryGetValue(pid, out Process process))

@@ -231,3 +231,4 @@ FakesAssemblies/
 
 *~
 .DS_Store
+/src/TcpMonitor/Playground.cs
