@@ -67,14 +67,17 @@ namespace TcpMonitor
         {
             container.Register<IMemoryCache>(() => new MemoryCache(new MemoryCacheOptions()));
             container.Register<IProcessService, ProcessService>();
-            container.Register<ITcpConnectionService, TcpConnectionService>();
 
             // Use the WinRM service if enabled for superior performance else use COM interop implementation
-            var isWinRmEnabled = TcpWinRMService.IsWindowsRemoteManagementEnabled();
-            container.RegisterConditional<ITcpPerformanceService, TcpWinRMService>(context => isWinRmEnabled);
-            container.RegisterConditional<ITcpPerformanceService, TcpPerformanceComService>(context => !isWinRmEnabled);
-            container.RegisterConditional<ITcpSettingsService, TcpWinRMService>(context => isWinRmEnabled);
-            container.RegisterConditional<ITcpSettingsService, TcpSettingsComService>(context => !isWinRmEnabled);
+            var isWinRmEnabled = TcpWinRmService.IsWindowsRemoteManagementEnabled();
+            container.Register<TcpComService>();
+            container.Register<TcpWinRmService>();
+            container.RegisterConditional<ITcpPerformanceService, TcpWinRmService>(context => isWinRmEnabled);
+            container.RegisterConditional<ITcpPerformanceService, TcpComService>(context => !isWinRmEnabled);
+            container.RegisterConditional<ITcpSettingsService, TcpWinRmService>(context => isWinRmEnabled);
+            container.RegisterConditional<ITcpSettingsService, TcpComService>(context => !isWinRmEnabled);
+            container.RegisterConditional<ITcpConnectionService, TcpWinRmService>(context => isWinRmEnabled);
+            container.RegisterConditional<ITcpConnectionService, TcpComService>(context => !isWinRmEnabled);
         }
 
         private static void RegisterLogging(Container container)

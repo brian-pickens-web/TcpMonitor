@@ -5,6 +5,6 @@ namespace TcpMonitor.Services
 {
     public interface ITcpConnectionService
     {
-        IEnumerable<TcpConnectionModel> GetTcpConnectionData();
+        IEnumerable<TcpConnectionModel> GetTcpConnections();
     }
 }

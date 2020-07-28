@@ -55,7 +55,7 @@ namespace TcpMonitor.Views.Data
 
         private IEnumerable<TcpConnectionModel> GetTcpConnections()
         {
-            return _tcpConnectionService.GetTcpConnectionData()
+            return _tcpConnectionService.GetTcpConnections()
                 .OrderBy(model => model.ProcessId);
         }
 
