@@ -1,9 +1,8 @@
-﻿using System.Threading.Tasks;
-using TcpMonitor.Services;
+﻿using TcpMonitor.Services;
 using TcpMonitor.Views.Framework;
 using Terminal.Gui;
 
-namespace TcpMonitor.Views.Data
+namespace TcpMonitor.Views.GridViews
 {
     public sealed class TcpSettingsGrid : View
     {

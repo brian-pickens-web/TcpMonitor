@@ -1,6 +1,6 @@
 ﻿using System;
-using TcpMonitor.Views.Data;
 using TcpMonitor.Views.Framework;
+using TcpMonitor.Views.GridViews;
 using Terminal.Gui;
 
 namespace TcpMonitor.Views

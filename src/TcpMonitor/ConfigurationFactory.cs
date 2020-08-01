@@ -13,7 +13,7 @@ using Serilog.Extensions.Logging;
 using SimpleInjector;
 using TcpMonitor.Services;
 using TcpMonitor.Views;
-using TcpMonitor.Views.Data;
+using TcpMonitor.Views.GridViews;
 
 namespace TcpMonitor
 {
