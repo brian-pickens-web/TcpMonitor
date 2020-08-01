@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using TcpMonitor.Domain;
@@ -31,57 +32,68 @@ namespace TcpMonitor.Services
             _logger.LogWarning("");
         }
 
-        public TcpSettingsModel GetTcpSettings()
+        public async Task<TcpSettingsModel> GetTcpSettings()
         {
-            var objectSet = StandardV2Services.ExecQuery(TcpSettings.SettingsQuery);
-            foreach (ISWbemObjectEx objInstance in objectSet)
+            var objectSet = await Task.Run(() => StandardV2Services.ExecQuery(TcpSettings.SettingsQuery));
+            return await Task.Run(() =>
             {
-                var portStart = Convert.ToInt32(objInstance.Properties_.Item(TcpSettings.DynamicPortRangeStartPortKey).get_Value());
-                var portRange = Convert.ToInt32(objInstance.Properties_.Item(TcpSettings.DynamicPortRangeNumberOfPortsKey).get_Value());
-
-                return new TcpSettingsModel()
+                foreach (ISWbemObjectEx objInstance in objectSet)
                 {
-                    DynamicPortRangeStart = portStart,
-                    DynamicPortRangeEnd = portStart + portRange,
-                    TotalDynamicPorts = portRange
-                };
-            }
+                    var portStart = Convert.ToInt32(objInstance.Properties_.Item(TcpSettings.DynamicPortRangeStartPortKey).get_Value());
+                    var portRange = Convert.ToInt32(objInstance.Properties_.Item(TcpSettings.DynamicPortRangeNumberOfPortsKey).get_Value());
 
-            return new TcpSettingsModel();
+                    return new TcpSettingsModel()
+                    {
+                        DynamicPortRangeStart = portStart,
+                        DynamicPortRangeEnd = portStart + portRange,
+                        TotalDynamicPorts = portRange
+                    };
+                }
+
+                return new TcpSettingsModel();
+            });
         }
 
-        public TcpPerformanceModel GetTcpPerformance()
+        public async Task<TcpPerformanceModel> GetTcpPerformance()
         {
-            ObjRefresher.Refresh();
-            foreach (ISWbemObjectEx objInstance in TcpPerformanceRefreshableItem.ObjectSet)
+            await Task.Run(() => ObjRefresher.Refresh());
+            return await Task.Run(() =>
             {
-                return new TcpPerformanceModel()
+                foreach (ISWbemObjectEx objInstance in TcpPerformanceRefreshableItem.ObjectSet)
                 {
-                    ConnectionFailures = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionFailuresKey).get_Value()),
-                    ConnectionsActive = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsActiveKey).get_Value()),
-                    ConnectionsEstablished = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsEstablishedKey).get_Value()),
-                    ConnectionsPassive = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsPassiveKey).get_Value()),
-                    ConnectionsReset = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsResetKey).get_Value())
-                };
-            }
+                    return new TcpPerformanceModel()
+                    {
+                        ConnectionFailures = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionFailuresKey).get_Value()),
+                        ConnectionsActive = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsActiveKey).get_Value()),
+                        ConnectionsEstablished = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsEstablishedKey).get_Value()),
+                        ConnectionsPassive = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsPassiveKey).get_Value()),
+                        ConnectionsReset = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsResetKey).get_Value())
+                    };
+                }
 
-            return new TcpPerformanceModel();
+                return new TcpPerformanceModel();
+            });
         }
 
-        public IEnumerable<TcpConnectionModel> GetTcpConnections()
+        public async IAsyncEnumerable<TcpConnectionModel> GetTcpConnections()
         {
-            ObjRefresher.Refresh();
-            foreach (ISWbemObjectEx objInstance in TcpConnectionsRefreshableItem.ObjectSet)
+            await Task.Run(() => ObjRefresher.Refresh());
+            var objectSet = TcpConnectionsRefreshableItem.ObjectSet.GetEnumerator();
+            while (await Task.Run(() => objectSet.MoveNext()))
             {
+                ISWbemObjectEx objInstance = (ISWbemObjectEx)objectSet.Current;
                 // CIM query can return TCP Instances with State = 100 - filter those out
                 var tcpState = Convert.ToInt32(objInstance.Properties_.Item(TcpConnection.StateKey).get_Value());
                 if (tcpState > 12) continue;
 
                 var processId = objInstance.Properties_.Item(TcpConnection.ProcessIdKey).get_Value();
+                var process = _processService.GetProcessFromPid(Convert.ToInt32(processId));
+                if (process == null) continue; // Process exited
+
                 yield return new TcpConnectionModel()
                 {
                     ProcessId = Convert.ToUInt16(processId),
-                    ProcessName = _processService.GetProcessFromPid(Convert.ToInt32(processId)).ProcessName,
+                    ProcessName = process.ProcessName,
                     LocalAddress = IPAddress.Parse(objInstance.Properties_.Item(TcpConnection.LocalAddressKey).get_Value().ToString()),
                     LocalPort = Convert.ToUInt16(objInstance.Properties_.Item(TcpConnection.LocalPortKey).get_Value()),
                     RemoteAddress = IPAddress.Parse(objInstance.Properties_.Item(TcpConnection.RemoteAddressKey).get_Value().ToString()),

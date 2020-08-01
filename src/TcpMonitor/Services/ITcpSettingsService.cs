@@ -1,9 +1,10 @@
-﻿using TcpMonitor.Models;
+﻿using System.Threading.Tasks;
+using TcpMonitor.Models;
 
 namespace TcpMonitor.Services
 {
     public interface ITcpSettingsService
     {
-        TcpSettingsModel GetTcpSettings();
+        Task<TcpSettingsModel> GetTcpSettings();
     }
 }

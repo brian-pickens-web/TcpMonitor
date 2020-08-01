@@ -1,4 +1,4 @@
-﻿namespace TcpMonitor.Views.Common
+﻿namespace TcpMonitor.Views.Framework
 {
     public interface IVisibilityChanged
     {

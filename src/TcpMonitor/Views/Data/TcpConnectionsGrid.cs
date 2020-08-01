@@ -4,7 +4,7 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using TcpMonitor.Models;
 using TcpMonitor.Services;
-using TcpMonitor.Views.Common;
+using TcpMonitor.Views.Framework;
 using Terminal.Gui;
 
 namespace TcpMonitor.Views.Data
@@ -22,10 +22,13 @@ namespace TcpMonitor.Views.Data
 
             Height = Dim.Fill();
             Width = Dim.Fill();
+            ContentSize = new Size(80, 4);
             ShowVerticalScrollIndicator = true;
 
             var tcpConnectionsGrid = new GridView();
-            tcpConnectionsGrid.SetRefreshableDataSource(RefreshTcpConnectionsGrid);
+            tcpConnectionsGrid.SetSourceAsync(RefreshTcpConnectionsGrid);
+            tcpConnectionsGrid.RefreshSize = new Progress<Size>(UpdateContentSize);
+            
             Add(tcpConnectionsGrid);
 
             VisibilityChangedEvent += isVisible =>
@@ -33,7 +36,7 @@ namespace TcpMonitor.Views.Data
                 if (isVisible)
                 {
                     _logger.LogTrace("TcpConnectionsGrid.StartRefresh()");
-                    tcpConnectionsGrid.StartRefresh();
+                    tcpConnectionsGrid.StartRefresh(6000);
                 }
                 else
                 {
@@ -43,20 +46,23 @@ namespace TcpMonitor.Views.Data
             };
         }
 
-        private IEnumerable<TcpConnectionModel> RefreshTcpConnectionsGrid()
+        private void UpdateContentSize(Size gridSize)
         {
-            ContentSize = new Size(109, 2);
-            foreach (var tcpConnectionModel in GetTcpConnections())
-            {
-                ContentSize = Size.Add(ContentSize, new Size(0, 1));
-                yield return tcpConnectionModel;
-            }
         }
 
-        private IEnumerable<TcpConnectionModel> GetTcpConnections()
+        private async IAsyncEnumerable<TcpConnectionModel> RefreshTcpConnectionsGrid()
         {
-            return _tcpConnectionService.GetTcpConnections()
+            var orderedTcpConnections = _tcpConnectionService
+                .GetTcpConnections()
                 .OrderBy(model => model.ProcessId);
+            var count = 0;
+            await foreach (var tcpConnectionModel in orderedTcpConnections)
+            {
+                count++;
+                yield return tcpConnectionModel;
+            }
+            ContentSize = new Size(90, count);
+            _logger.LogTrace($"Connections Count: {count}");
         }
 
         public void VisibilityChanged(bool isVisible)

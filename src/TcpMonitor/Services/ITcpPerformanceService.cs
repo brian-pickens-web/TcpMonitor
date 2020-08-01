@@ -1,9 +1,10 @@
-﻿using TcpMonitor.Models;
+﻿using System.Threading.Tasks;
+using TcpMonitor.Models;
 
 namespace TcpMonitor.Services
 {
     public interface ITcpPerformanceService
     {   
-        TcpPerformanceModel GetTcpPerformance();
+        Task<TcpPerformanceModel> GetTcpPerformance();
     }
 }
