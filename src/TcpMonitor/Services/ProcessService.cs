@@ -26,7 +26,15 @@ namespace TcpMonitor.Services
             }
 
             // Key not in cache, so get data.
-            process = Process.GetProcessById(pid);
+            try
+            {
+                process = Process.GetProcessById(pid);
+            }
+            catch (ArgumentException)
+            {
+                // Process is not running, return null
+                return null;
+            }
 
             var cacheEntryOptions = new MemoryCacheEntryOptions()
                 .SetSlidingExpiration(TimeSpan.FromMinutes(5));

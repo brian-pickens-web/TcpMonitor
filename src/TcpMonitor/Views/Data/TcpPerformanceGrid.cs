@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 using TcpMonitor.Services;
-using TcpMonitor.Views.Common;
+using TcpMonitor.Views.Framework;
 using Terminal.Gui;
 
 namespace TcpMonitor.Views.Data
@@ -15,11 +15,11 @@ namespace TcpMonitor.Views.Data
         {
             _logger = logger;
 
-            Height = 3;
+            Height = 4;
             Width = Dim.Fill();
 
             var tcpPerformanceGrid = new GridView();
-            tcpPerformanceGrid.SetRefreshableDataSource(tcpPerformanceService.GetTcpPerformance);
+            tcpPerformanceGrid.SetSourceAsync(tcpPerformanceService.GetTcpPerformance);
             Add(tcpPerformanceGrid);
 
             VisibilityChangedEvent += isVisible =>
@@ -27,7 +27,7 @@ namespace TcpMonitor.Views.Data
                 if (isVisible)
                 {
                     _logger.LogTrace("TcpPerformanceGrid.StartRefresh()");
-                    tcpPerformanceGrid.StartRefresh();
+                    tcpPerformanceGrid.StartRefresh(3001);
                 }
                 else
                 {

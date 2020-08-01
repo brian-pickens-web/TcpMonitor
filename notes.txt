@@ -10,3 +10,9 @@ https://docs.microsoft.com/en-us/windows/win32/wmisdk/scripting-api-objects
 https://stackoverflow.com/questions/9190437/monitoring-bandwith-on-a-remote-machine-with-wmi
 https://docs.microsoft.com/en-us/powershell/module/nettcpip/get-nettcpsetting?view=win10-ps
 https://docs.microsoft.com/en-us/previous-versions/windows/desktop/nettcpipprov/msft-nettcpsetting
+
+#Wrap MMI Obervables in awaitable classes
+https://github.com/PowerShell/MMI
+https://stackoverflow.com/questions/7863573/awaitable-task-based-queue
+https://docs.microsoft.com/en-us/troubleshoot/dotnet/csharp/make-class-foreach-statement
+https://docs.microsoft.com/en-us/dotnet/standard/events/observer-design-pattern

@@ -1,7 +1,7 @@
-﻿using TcpMonitor.Services;
-using TcpMonitor.Views.Common;
+﻿using System.Threading.Tasks;
+using TcpMonitor.Services;
+using TcpMonitor.Views.Framework;
 using Terminal.Gui;
-using View = Terminal.Gui.View;
 
 namespace TcpMonitor.Views.Data
 {
@@ -9,12 +9,18 @@ namespace TcpMonitor.Views.Data
     {
         public TcpSettingsGrid(ITcpSettingsService tcpSettingsService)
         {
-            Height = 3;
+            Height = 4;
             Width = Dim.Fill();
-
             var settingsGrid = new GridView();
-            settingsGrid.SetDataSource(tcpSettingsService.GetTcpSettings());
+            var data = tcpSettingsService.GetTcpSettings().GetAwaiter().GetResult();
+            settingsGrid.SetSource(data);
             Add(settingsGrid);
+
+            // Application.Loaded += async (args) =>
+            // {
+            //     var data = await tcpSettingsService.GetTcpSettings();
+            //     settingsGrid.SetSource(data);
+            // };
         }
     }
 }

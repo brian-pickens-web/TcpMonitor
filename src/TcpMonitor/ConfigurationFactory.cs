@@ -42,7 +42,7 @@ namespace TcpMonitor
         {
             var container = new Container();
             container.Options.DefaultLifestyle = Lifestyle.Singleton;
-            container.Options.EnableAutoVerification = !Environment.IsDevelopment();
+            container.Options.EnableAutoVerification = false;
 
             RegisterViews(container);
             RegisterServices(container);
@@ -79,6 +79,7 @@ namespace TcpMonitor
             container.RegisterConditional<ITcpSettingsService, TcpComService>(context => !isWinRmEnabled);
             container.RegisterConditional<ITcpConnectionService, TcpWinRmService>(context => isWinRmEnabled);
             container.RegisterConditional<ITcpConnectionService, TcpComService>(context => !isWinRmEnabled);
+            // container.RegisterDecorator<ITcpConnectionService, TcpConnectionCacheWrapper>();
         }
 
         private static void RegisterLogging(Container container)

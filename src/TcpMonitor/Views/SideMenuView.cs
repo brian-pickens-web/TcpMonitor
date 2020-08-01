@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using TcpMonitor.Views.Common;
+using TcpMonitor.Views.Framework;
 using Terminal.Gui;
 
 namespace TcpMonitor.Views
 {
     public sealed class SideMenuView : Window
     {
-        private readonly List<Action<View>> _menuItemChangedEventHandlers = new List<Action<View>>();
         private readonly Dictionary<string, View> _menu = new Dictionary<string, View>();
 
         public SideMenuView(DashboardView dashboardView, TcpConnectionsView tcpConnectionsView)
