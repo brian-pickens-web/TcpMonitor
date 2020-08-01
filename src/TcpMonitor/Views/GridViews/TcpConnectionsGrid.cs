@@ -7,7 +7,7 @@ using TcpMonitor.Services;
 using TcpMonitor.Views.Framework;
 using Terminal.Gui;
 
-namespace TcpMonitor.Views.Data
+namespace TcpMonitor.Views.GridViews
 {
     public sealed class TcpConnectionsGrid : ScrollView, IVisibilityChanged
     {
