@@ -29,18 +29,7 @@ namespace TcpMonitor.Views.Framework
             TrySetColumnsFromType(typeof(T));
             _refreshAction = loop =>
             {
-                loop.Invoke(async () =>
-                {
-                    var newRowList = new List<string[]>();
-                    await foreach (var item in getStream())
-                    {
-                        var row = await InsertItem(item);
-                        newRowList.Add(row);
-                        RefreshItem?.Report(item);
-                        RefreshSize?.Report(GetGridSize());
-                    }
-                    await RemoveExpiredRows(newRowList);
-                });
+                loop.Invoke(async () => await RefreshAsync(getStream));
                 return true;
             };
         }
@@ -50,16 +39,7 @@ namespace TcpMonitor.Views.Framework
             TrySetColumnsFromType(typeof(T));
             _refreshAction = loop =>
             {
-                loop.Invoke(async () =>
-                {
-                    var newRowList = new List<string[]>();
-                    var item = await getItemAsync();
-                    var row = await InsertItem(item);
-                    newRowList.Add(row);
-                    await RemoveExpiredRows(newRowList);
-                    RefreshItem?.Report(item);
-                    RefreshSize?.Report(GetGridSize());
-                });
+                loop.Invoke(async () => await RefreshAsync(getItemAsync));
                 return true;
             };
         }
@@ -95,6 +75,30 @@ namespace TcpMonitor.Views.Framework
         public async Task UpdateAsync()
         {
             await Task.Run(() => _refreshAction?.Invoke(Application.MainLoop));
+        }
+
+        private async Task RefreshAsync<T>(Func<IAsyncEnumerable<T>> getStream)
+        {
+            var newRowList = new List<string[]>();
+            await foreach (var item in getStream())
+            {
+                var row = await InsertItem(item);
+                newRowList.Add(row);
+                RefreshItem?.Report(item);
+                RefreshSize?.Report(GetGridSize());
+            }
+            await RemoveExpiredRows(newRowList);
+        }
+
+        private async Task RefreshAsync<T>(Func<Task<T>> getItemAsync)
+        {
+            var newRowList = new List<string[]>();
+            var item = await getItemAsync();
+            var row = await InsertItem(item);
+            newRowList.Add(row);
+            await RemoveExpiredRows(newRowList);
+            RefreshItem?.Report(item);
+            RefreshSize?.Report(GetGridSize());
         }
 
         private async Task RemoveExpiredRows(IEnumerable<string[]> newRowList)

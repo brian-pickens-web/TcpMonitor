@@ -16,19 +16,23 @@ namespace TcpMonitor.Views.Framework
         private readonly Label _nameLabel;
         private readonly Label _dividerLabel;
         private readonly GridView _parent;
-        private readonly ListView _columnListView;
-        private readonly OrderedDictionary _orderedRowDictionary = new OrderedDictionary();
-        private readonly SemaphoreSlim _lock = new SemaphoreSlim(1);
+        private readonly OrderedDictionary _dataSource;
+        private readonly OrderedDictionaryListWrapper _dataSourceList;
+        private readonly SemaphoreSlim _lock;
 
         private int _height;
         private int _width;
 
-        public Size Size => new Size(_width, _orderedRowDictionary.Count);
+        public Size Size => new Size(_width, _dataSource.Count);
 
         public string Name => _nameLabel.Text.ToString();
 
         public GridViewColumn(string name, GridView GridView)
         {
+            _dataSource = new OrderedDictionary();
+            _dataSourceList = new OrderedDictionaryListWrapper(_dataSource);
+            _lock = new SemaphoreSlim(1);
+
             _parent = GridView;
             _height = 3;
             _width = name.Length;
@@ -40,46 +44,51 @@ namespace TcpMonitor.Views.Framework
             Add(_nameLabel);
             Add(_dividerLabel);
 
-            _columnListView = new ListView(new DelegateDatasource(GetListViewSource)) { Y = Pos.Bottom(_dividerLabel), Height = Dim.Fill(), Width = Dim.Fill() };
-            _columnListView.AllowsMarking = false;
-            _columnListView.AllowsMultipleSelection = false;
-            Add(_columnListView);
+            var columnListView = new ListView(_dataSourceList)
+            {
+                Y = Pos.Bottom(_dividerLabel),
+                Height = Dim.Fill(),
+                Width = Dim.Fill(),
+                AllowsMarking = false,
+                AllowsMultipleSelection = false
+            };
+            Add(columnListView);
         }
 
         public async Task AddRow(string value, int rowIndex)
         {
             value = !string.IsNullOrEmpty(value) ? value : DividerChar.ToString();
             await _lock.WaitAsync();
-            _orderedRowDictionary.Add(rowIndex, value);
+            _dataSource.Add(rowIndex, value);
             _lock.Release();
-            await RecalculateSize();
+            RecalculateSize();
         }
         
         public async Task RemoveRow(int index)
         {
             await _lock.WaitAsync();
-            _orderedRowDictionary.Remove(index);
+            _dataSource.Remove(index);
             _lock.Release();
-            await RecalculateSize();
+            RecalculateSize();
         }
         
         public async Task ClearAll()
         {
             await _lock.WaitAsync();
-            _orderedRowDictionary.Clear();
+            _dataSource.Clear();
             _lock.Release();
         }
 
-        private async Task RecalculateSize()
+        private void RecalculateSize()
         {
-            var values = new List<string>(await GetListViewSourceAsync())
+            var values = new List<string>(_dataSourceList.Cast<string>())
             {
                 _dividerLabel.Text.ToString(),
                 _nameLabel.Text.ToString()
             };
 
             var longestValue = values.Max();
-            SetSize(longestValue.Length, _orderedRowDictionary.Count);
+            SetSize(longestValue.Length, _dataSource.Count);
         }
 
         private void SetSize(int width, int height)
@@ -91,25 +100,10 @@ namespace TcpMonitor.Views.Framework
                 _dividerLabel.Text = string.Empty.PadLeft(width, DividerChar);
             }
 
-            if (Math.Max(3, height) != _height)
-            {
-                Height = height;
-                _height = height;
-            }
-        }
+            if (Math.Max(3, height) == _height) return;
 
-        private async Task<string[]> GetListViewSourceAsync()
-        {
-            await _lock.WaitAsync();
-            var values = new string[_orderedRowDictionary.Count];
-            _orderedRowDictionary.Values.CopyTo(values, 0);
-            _lock.Release();
-            return values;
-        }
-
-        private IList GetListViewSource()
-        {
-            return GetListViewSourceAsync().GetAwaiter().GetResult();
+            Height = height;
+            _height = height;
         }
     }
 }
