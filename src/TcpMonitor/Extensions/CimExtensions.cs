@@ -11,12 +11,12 @@ namespace TcpMonitor.Extensions
     {
         public static Task<T> AsTask<T>(this CimAsyncResult<T> observable)
         {
-            return new ObservableResultTaskWrapper<T>(observable).Task;
+            return new ObserverResultTaskWrapper<T>(observable).Task;
         }
 
         public static async IAsyncEnumerable<T> AsAsyncEnumerable<T>(this CimAsyncMultipleResults<T> observable, [EnumeratorCancellation] CancellationToken token = new CancellationToken())
         {
-            var enumerable  = new ObservableAsyncEnumerableTaskWrapper<T>(observable).AsyncEnumerable;
+            using var enumerable = new ObserverAsyncEnumerableWrapper<T>(observable);
             await using var e = enumerable.GetAsyncEnumerator(token);
             while (await e.MoveNextAsync())
             {
