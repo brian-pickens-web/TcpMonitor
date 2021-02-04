@@ -16,3 +16,10 @@ https://github.com/PowerShell/MMI
 https://stackoverflow.com/questions/7863573/awaitable-task-based-queue
 https://docs.microsoft.com/en-us/troubleshoot/dotnet/csharp/make-class-foreach-statement
 https://docs.microsoft.com/en-us/dotnet/standard/events/observer-design-pattern
+https://blog.stephencleary.com/2013/01/async-oop-2-constructors.html
+
+#PooledAwait
+https://mgravell.github.io/PooledAwait/
+
+#Personal StackOverflow Questions
+https://stackoverflow.com/questions/63234041/system-threading-channels-readasync-method-is-blocking-execution

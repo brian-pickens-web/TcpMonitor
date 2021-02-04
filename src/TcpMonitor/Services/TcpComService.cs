@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
+using PooledAwait;
 using TcpMonitor.Domain;
 using TcpMonitor.Models;
 using WbemScripting;
@@ -32,11 +34,16 @@ namespace TcpMonitor.Services
             _logger.LogWarning("");
         }
 
-        public async Task<TcpSettingsModel> GetTcpSettings()
+        static async PooledValueTask<bool> MoveNext(IEnumerator enumerator) => await Task.Run(enumerator.MoveNext);
+
+        public Task<TcpSettingsModel> GetTcpSettings()
         {
-            var objectSet = await Task.Run(() => StandardV2Services.ExecQuery(TcpSettings.SettingsQuery));
-            return await Task.Run(() =>
+            return Impl();
+            static async PooledTask<TcpSettingsModel> Impl()
             {
+                await Task.Yield();
+
+                var objectSet = StandardV2Services.ExecQuery(TcpSettings.SettingsQuery);
                 foreach (ISWbemObjectEx objInstance in objectSet)
                 {
                     var portStart = Convert.ToInt32(objInstance.Properties_.Item(TcpSettings.DynamicPortRangeStartPortKey).get_Value());
@@ -51,41 +58,49 @@ namespace TcpMonitor.Services
                 }
 
                 return new TcpSettingsModel();
-            });
+            }
         }
 
-        public async Task<TcpPerformanceModel> GetTcpPerformance()
+        public Task<TcpPerformanceModel> GetTcpPerformance()
         {
-            await Task.Run(() => ObjRefresher.Refresh());
-            return await Task.Run(() =>
+            return Impl();
+            static async PooledTask<TcpPerformanceModel> Impl()
             {
-                foreach (ISWbemObjectEx objInstance in TcpPerformanceRefreshableItem.ObjectSet)
+                await Task.Yield();
+                ObjRefresher.Refresh();
+
+                var objectSet = TcpPerformanceRefreshableItem.ObjectSet.GetEnumerator();
+
+                // Only return the first item, 
+                if (!await MoveNext(objectSet))
                 {
-                    return new TcpPerformanceModel()
-                    {
-                        ConnectionFailures = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionFailuresKey).get_Value()),
-                        ConnectionsActive = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsActiveKey).get_Value()),
-                        ConnectionsEstablished = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsEstablishedKey).get_Value()),
-                        ConnectionsPassive = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsPassiveKey).get_Value()),
-                        ConnectionsReset = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsResetKey).get_Value())
-                    };
+                    return new TcpPerformanceModel();
                 }
 
-                return new TcpPerformanceModel();
-            });
+                ISWbemObjectEx objInstance = (ISWbemObjectEx)objectSet.Current;
+                return new TcpPerformanceModel()
+                {
+                    ConnectionFailures = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionFailuresKey).get_Value()),
+                    ConnectionsActive = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsActiveKey).get_Value()),
+                    ConnectionsEstablished = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsEstablishedKey).get_Value()),
+                    ConnectionsPassive = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsPassiveKey).get_Value()),
+                    ConnectionsReset = Convert.ToInt32(objInstance.Properties_.Item(TcpPerformance.ConnectionsResetKey).get_Value())
+                };
+
+            }
         }
 
         public async IAsyncEnumerable<TcpConnectionModel> GetTcpConnections()
         {
-            await Task.Run(() => ObjRefresher.Refresh());
+            await Task.Yield();
+
+            ObjRefresher.Refresh();
             var objectSet = TcpConnectionsRefreshableItem.ObjectSet.GetEnumerator();
-            while (await Task.Run(() => objectSet.MoveNext()))
+
+            while (await MoveNext(objectSet))
             {
                 ISWbemObjectEx objInstance = (ISWbemObjectEx)objectSet.Current;
-                // CIM query can return TCP Instances with State = 100 - filter those out
                 var tcpState = Convert.ToInt32(objInstance.Properties_.Item(TcpConnection.StateKey).get_Value());
-                if (tcpState > 12) continue;
-
                 var processId = objInstance.Properties_.Item(TcpConnection.ProcessIdKey).get_Value();
                 var process = _processService.GetProcessFromPid(Convert.ToInt32(processId));
                 if (process == null) continue; // Process exited

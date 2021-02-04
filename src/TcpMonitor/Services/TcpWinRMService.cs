@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Management.Infrastructure;
+using PooledAwait;
 using TcpMonitor.Domain;
 using TcpMonitor.Extensions;
 using TcpMonitor.Models;
@@ -21,42 +22,50 @@ namespace TcpMonitor.Services
             _processService = processService;
         }
 
-        public async Task<TcpSettingsModel> GetTcpSettings()
+        public Task<TcpSettingsModel> GetTcpSettings()
         {
-            var session = CimSession.Create(Server);
-            var instances = session
-                .QueryInstancesAsync(TcpSettings.SettingsClassNamespace, Wmi.QueryDialect, TcpSettings.SettingsQuery)
-                .AsAsyncEnumerable();
-
-            var instance = await instances.FirstOrDefaultAsync();
-            if (instance == null)
-                return null;
-
-            var startPort = Convert.ToInt32(instance.CimInstanceProperties[TcpSettings.DynamicPortRangeStartPortKey].Value);
-            var totalPorts = Convert.ToInt32(instance.CimInstanceProperties[TcpSettings.DynamicPortRangeNumberOfPortsKey].Value);
-            return new TcpSettingsModel()
+            return Impl();
+            static async PooledTask<TcpSettingsModel> Impl()
             {
-                DynamicPortRangeStart = startPort,
-                DynamicPortRangeEnd = startPort + totalPorts,
-                TotalDynamicPorts = totalPorts
-            };
+                var session = CimSession.Create(Server);
+                var instances = session
+                    .QueryInstancesAsync(TcpSettings.SettingsClassNamespace, Wmi.QueryDialect, TcpSettings.SettingsQuery)
+                    .AsAsyncEnumerable();
+
+                var instance = await instances.FirstOrDefaultAsync();
+                if (instance == null)
+                    return null;
+
+                var startPort = Convert.ToInt32(instance.CimInstanceProperties[TcpSettings.DynamicPortRangeStartPortKey].Value);
+                var totalPorts = Convert.ToInt32(instance.CimInstanceProperties[TcpSettings.DynamicPortRangeNumberOfPortsKey].Value);
+                return new TcpSettingsModel()
+                {
+                    DynamicPortRangeStart = startPort,
+                    DynamicPortRangeEnd = startPort + totalPorts,
+                    TotalDynamicPorts = totalPorts
+                };
+            }
         }
 
-        public async Task<TcpPerformanceModel> GetTcpPerformance()
+        public Task<TcpPerformanceModel> GetTcpPerformance()
         {
-            var session = CimSession.Create(Server);
-            var instance = await session
-                .GetInstanceAsync(TcpPerformance.TcpPerformanceNamespace, new CimInstance(TcpPerformance.TcpPerformanceClassName))
-                .AsTask();
-
-            return new TcpPerformanceModel()
+            return Impl();
+            static async PooledTask<TcpPerformanceModel> Impl()
             {
-                ConnectionFailures = Convert.ToInt32(instance.CimInstanceProperties[TcpPerformance.ConnectionFailuresKey].Value),
-                ConnectionsActive = Convert.ToInt32(instance.CimInstanceProperties[TcpPerformance.ConnectionsActiveKey].Value.ToString()),
-                ConnectionsEstablished = Convert.ToInt32(instance.CimInstanceProperties[TcpPerformance.ConnectionsEstablishedKey].Value),
-                ConnectionsPassive = Convert.ToInt32(instance.CimInstanceProperties[TcpPerformance.ConnectionsPassiveKey].Value),
-                ConnectionsReset = Convert.ToInt32(instance.CimInstanceProperties[TcpPerformance.ConnectionsResetKey].Value)
-            };
+                var session = CimSession.Create(Server);
+                var instance = await session
+                    .GetInstanceAsync(TcpPerformance.TcpPerformanceNamespace, new CimInstance(TcpPerformance.TcpPerformanceClassName))
+                    .AsTask();
+
+                return new TcpPerformanceModel()
+                {
+                    ConnectionFailures = Convert.ToInt32(instance.CimInstanceProperties[TcpPerformance.ConnectionFailuresKey].Value),
+                    ConnectionsActive = Convert.ToInt32(instance.CimInstanceProperties[TcpPerformance.ConnectionsActiveKey].Value.ToString()),
+                    ConnectionsEstablished = Convert.ToInt32(instance.CimInstanceProperties[TcpPerformance.ConnectionsEstablishedKey].Value),
+                    ConnectionsPassive = Convert.ToInt32(instance.CimInstanceProperties[TcpPerformance.ConnectionsPassiveKey].Value),
+                    ConnectionsReset = Convert.ToInt32(instance.CimInstanceProperties[TcpPerformance.ConnectionsResetKey].Value)
+                };
+            }
         }
 
         public async IAsyncEnumerable<TcpConnectionModel> GetTcpConnections()
@@ -64,14 +73,11 @@ namespace TcpMonitor.Services
             var session = CimSession.Create(Server);
             var instances = session
                     .QueryInstancesAsync(TcpConnection.TcpConnectionNamespace, Wmi.QueryDialect, $"Select * From {TcpConnection.TcpConnectionClassName}")
-                    .AsAsyncEnumerable();
+                    .ToAsyncEnumerable();
 
             await foreach (var instance in instances)
             {
-                // CIM query can return TCP Instances with State = 100 - filter those out
                 var tcpState = Convert.ToInt32(instance.CimInstanceProperties[TcpConnection.StateKey].Value);
-                if (tcpState > 12) continue;
-
                 var processId = Convert.ToUInt32(instance.CimInstanceProperties[TcpConnection.ProcessIdKey].Value);
                 var process = _processService.GetProcessFromPid(processId);
                 if (process == null) continue; // Process exited

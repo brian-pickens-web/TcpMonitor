@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TcpMonitor.Models;
 using TcpMonitor.Services;
@@ -9,11 +10,17 @@ using Terminal.Gui;
 
 namespace TcpMonitor.Views.GridViews
 {
-    public sealed class TcpConnectionsGrid : ScrollView, IVisibilityChanged
+    public sealed class TcpConnectionsGrid : View, IVisibilityChanged
     {
+        // Services
         private readonly ILogger _logger;
         private readonly ITcpConnectionService _tcpConnectionService;
-        private readonly Action<bool> VisibilityChangedEvent;
+        private readonly Action<bool> _visibilityChangedEvent;
+
+        // Views
+        private readonly ScrollView _connectionsContent;
+        private readonly GridView _tcpConnectionsGrid;
+        private readonly Button _refreshButton;
 
         public TcpConnectionsGrid(ILogger logger, ITcpConnectionService tcpConnectionService)
         {
@@ -22,32 +29,33 @@ namespace TcpMonitor.Views.GridViews
 
             Height = Dim.Fill();
             Width = Dim.Fill();
-            ContentSize = new Size(80, 4);
-            ShowVerticalScrollIndicator = true;
 
-            var tcpConnectionsGrid = new GridView();
-            tcpConnectionsGrid.SetSourceAsync(RefreshTcpConnectionsGrid);
-            tcpConnectionsGrid.RefreshSize = new Progress<Size>(UpdateContentSize);
-            
-            Add(tcpConnectionsGrid);
+            _tcpConnectionsGrid = new GridView() { Height = Dim.Height(this) - 2 };
+            _tcpConnectionsGrid.SetSourceAsync(RefreshTcpConnectionsGrid);
 
-            VisibilityChangedEvent += isVisible =>
+            _connectionsContent = new ScrollView()
             {
-                if (isVisible)
-                {
-                    _logger.LogTrace("TcpConnectionsGrid.StartRefresh()");
-                    tcpConnectionsGrid.StartRefresh(6000);
-                }
-                else
-                {
-                    _logger.LogTrace("TcpConnectionsGrid.StopRefresh()");
-                    tcpConnectionsGrid.StopRefresh();
-                }
+                Width = Dim.Fill(),
+                Height = Dim.Height(this) - 1,
+                ContentSize = new Size(80, 4),
+                ShowVerticalScrollIndicator = true
             };
-        }
+            _connectionsContent.Add(_tcpConnectionsGrid);
+            
+            _refreshButton = new Button()
+            {
+                Text = "Refresh",
+                Y = Pos.Bottom(this) - 1,
+                MouseClick = async args => await _tcpConnectionsGrid.UpdateAsync()
+            };
 
-        private void UpdateContentSize(Size gridSize)
-        {
+            Add(_connectionsContent);
+            Add(_refreshButton);
+
+            _visibilityChangedEvent += async b =>
+            {
+                if (b) await Refresh();
+            };
         }
 
         private async IAsyncEnumerable<TcpConnectionModel> RefreshTcpConnectionsGrid()
@@ -55,20 +63,28 @@ namespace TcpMonitor.Views.GridViews
             var orderedTcpConnections = _tcpConnectionService
                 .GetTcpConnections()
                 .OrderBy(model => model.ProcessId);
+
             var count = 0;
             await foreach (var tcpConnectionModel in orderedTcpConnections)
             {
                 count++;
                 yield return tcpConnectionModel;
             }
-            ContentSize = new Size(90, count);
+
+            _connectionsContent.ContentSize = new Size(90, count);
             _logger.LogTrace($"Connections Count: {count}");
         }
 
         public void VisibilityChanged(bool isVisible)
         {
             _logger.LogInformation($"TcpConnectionGrid Visibility Changed: {isVisible}");
-            VisibilityChangedEvent(isVisible);
+            _visibilityChangedEvent(isVisible);
+        }
+
+        private async Task Refresh()
+        {
+            _refreshButton.Visible = false;
+            await _tcpConnectionsGrid.UpdateAsync();
         }
     }
 

@@ -1,4 +1,5 @@
-﻿using TcpMonitor.Services;
+﻿using System.Threading.Tasks;
+using TcpMonitor.Services;
 using TcpMonitor.Views.Framework;
 using Terminal.Gui;
 
@@ -11,15 +12,10 @@ namespace TcpMonitor.Views.GridViews
             Height = 4;
             Width = Dim.Fill();
             var settingsGrid = new GridView();
-            var data = tcpSettingsService.GetTcpSettings().GetAwaiter().GetResult();
-            settingsGrid.SetSource(data);
+            settingsGrid.SetSourceAsync(tcpSettingsService.GetTcpSettings);
             Add(settingsGrid);
 
-            // Application.Loaded += async (args) =>
-            // {
-            //     var data = await tcpSettingsService.GetTcpSettings();
-            //     settingsGrid.SetSource(data);
-            // };
+            Task.Run(async () => await settingsGrid.UpdateAsync());
         }
     }
 }

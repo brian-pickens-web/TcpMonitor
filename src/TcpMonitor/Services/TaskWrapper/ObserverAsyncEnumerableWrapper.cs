@@ -1,34 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
+using PooledAwait;
 
 namespace TcpMonitor.Services.TaskWrapper
 {
-    public sealed class ObserverAsyncEnumerableWrapper<T> : IAsyncEnumerable<T>, IObserver<T>, IDisposable
+    public sealed class ObserverAsyncEnumerableWrapper<T> : IAsyncEnumerable<T>, IAsyncEnumerator<T>, IObserver<T>, IDisposable
     {
         private readonly IDisposable _unsubscriber;
         private readonly SemaphoreSlim _enumerationSemaphore = new SemaphoreSlim(1);
-        private readonly BufferBlock<T> _bufferBlock = new BufferBlock<T>();
+        private readonly Channel<T> _channel = Channel.CreateUnbounded<T>();
 
-        private bool _providerComplete = false;
-
-        public Task Completion => _bufferBlock.Completion;
+        private CancellationToken _token = default;
+        private bool _providerComplete = default;
 
         public ObserverAsyncEnumerableWrapper(IObservable<T> provider)
         {
             _unsubscriber = provider.Subscribe(this);
         }
 
-        public void OnNext(T value)
+        public async void OnNext(T value)
         {
-            _bufferBlock.Post(value);
+            await _channel.Writer.WriteAsync(value);
         }
 
         public void OnError(Exception error)
         {
-            throw error;
+            _channel.Writer.Complete(error);
         }
 
         public void OnCompleted()
@@ -36,41 +37,55 @@ namespace TcpMonitor.Services.TaskWrapper
             _providerComplete = true;
         }
 
-        public async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken token = new CancellationToken())
+        public async IAsyncEnumerator<T> GetAsyncEnumerator([EnumeratorCancellation] CancellationToken token = new CancellationToken())
         {
+            // Set the cancellation token
+            _token = token;
+
             // We lock this so we only ever enumerate once at a time.
             // That way we ensure all items are returned in a continuous
-            // fashion with no 'holes' in the data when two foreach compete.
-            await _enumerationSemaphore.WaitAsync();
+            // fashion with no 'holes' in the data when two foreach compete.await Task.Yield();
+            await _enumerationSemaphore.WaitAsync(token);
             try
             {
-                // Return new elements until cancellationToken is triggered.
-                while (!_providerComplete || _bufferBlock.Count > 0)
+                while (await MoveNextAsync())
                 {
                     // Make sure to throw on cancellation so the Task will transfer into a canceled state
-                    token.ThrowIfCancellationRequested();
-                    // Log.Logger.Verbose("waiting on bufferBlock.Receive");
-                    // var value = await _bufferBlock.ReceiveAsync();
-                    // Log.Logger.Verbose($"yield return: {value}");
-                    // yield return value;
+                    _token.ThrowIfCancellationRequested();
 
-                    _bufferBlock.TryReceive(null, out var item);
-                    if (item == null) continue;
-                    yield return item;
+                    yield return Current;
                 }
             }
             finally
             {
-                _bufferBlock.Complete();
+                _channel.Writer.TryComplete();
                 _enumerationSemaphore.Release();
             }
         }
 
+        public ValueTask<bool> MoveNextAsync()
+        {
+            return Impl();
+            async PooledValueTask<bool> Impl()
+            {
+                Current = await _channel.Reader.ReadAsync(_token);
+                return await _channel.Reader.WaitToReadAsync(_token);
+            }
+        }
+
+        public T Current { get; private set; }
+
+        public async ValueTask DisposeAsync()
+        {
+            await Task.Yield();
+            Dispose();
+        }
+
         public void Dispose()
         {
-            _bufferBlock.Complete();
             _unsubscriber?.Dispose();
             _enumerationSemaphore?.Dispose();
+            _channel.Writer.TryComplete();
         }
     }
 }
