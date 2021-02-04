@@ -85,6 +85,7 @@ namespace TcpMonitor
         private static void RegisterLogging(Container container)
         {
             var serilogLogger = CreateLogger();
+            Log.Logger = serilogLogger;
             container.Register<ILoggerFactory>(() => new SerilogLoggerFactory(serilogLogger));
             container.Register<Microsoft.Extensions.Logging.ILogger>(() =>
                 container.GetInstance<ILoggerFactory>().AddSerilog(serilogLogger).CreateLogger("logger"));

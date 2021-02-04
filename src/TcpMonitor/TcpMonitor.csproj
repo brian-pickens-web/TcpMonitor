@@ -11,6 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Services\TaskWrapper\ObserverAsyncEnumerableWrapper - Copy.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <COMReference Include="WbemScripting.dll">
       <Guid>565783c6-cb41-11d1-8b02-00600806d9b6</Guid>
       <VersionMajor>1</VersionMajor>
@@ -23,17 +27,23 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Services\TaskWrapper\ObserverAsyncEnumerableWrapper - Copy.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="3.1.6" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.6" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.6" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.6" />
     <PackageReference Include="Microsoft.Management.Infrastructure" Version="2.0.0" />
+    <PackageReference Include="PooledAwait" Version="1.0.49" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.1" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="1.0.1" />
     <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.0" />
     <PackageReference Include="SimpleInjector" Version="5.0.3" />
     <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
     <PackageReference Include="System.Linq.Async" Version="4.1.1" />
+    <PackageReference Include="System.Threading.Channels" Version="4.7.1" />
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.11.1" />
   </ItemGroup>
 
